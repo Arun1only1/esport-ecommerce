@@ -1,8 +1,13 @@
 import { Router } from "express";
 
-import { registerUserValidationSchema } from "./user.validation.js";
+import {
+  loginUserValidationSchema,
+  registerUserValidationSchema,
+} from "./user.validation.js";
 import User from "./user.model.js";
 import bcrypt from "bcrypt";
+import validateReqBody from "../middewares/validation.middleware.js";
+import jwt from "jsonwebtoken";
 
 const router = Router();
 
@@ -11,24 +16,7 @@ const router = Router();
 // forget not: to hash password before saving user into db
 router.post(
   "/user/register",
-  async (req, res, next) => {
-    //   extract date from req.body
-    const data = req.body;
-
-    try {
-      // validate data using schema
-      const validatedData = await registerUserValidationSchema.validate(data);
-
-      req.body = validatedData;
-    } catch (error) {
-      // if validation fails, throw error
-      return res.status(400).send({ message: error.message });
-    }
-
-    // call next function
-
-    next();
-  },
+  validateReqBody(registerUserValidationSchema),
   async (req, res) => {
     // extract new user from req.body
     const newUser = req.body;
@@ -57,6 +45,47 @@ router.post(
     return res
       .status(201)
       .send({ message: "User is registered successfully." });
+  }
+);
+
+// login user
+router.post(
+  "/user/login",
+  validateReqBody(loginUserValidationSchema),
+  async (req, res) => {
+    // extract login credentials from req.body
+    const loginCredentials = req.body;
+
+    // find user by using email from login credentials
+    const user = await User.findOne({ email: loginCredentials.email });
+
+    // if user not found, throw new error
+    if (!user) {
+      return res.status(404).send({ message: "Invalid credentials." });
+    }
+
+    // check for password match
+    const plainPassword = loginCredentials.password;
+    const hashedPassword = user.password;
+    const isPasswordMatch = await bcrypt.compare(plainPassword, hashedPassword);
+
+    // if not password match, throw error
+    if (!isPasswordMatch) {
+      return res.status(404).send({ message: "Invalid credentials." });
+    }
+
+    // generate access token
+    const payload = { email: user.email };
+
+    const token = jwt.sign(payload, "81db0630328d85c88c64");
+
+    // to hide password
+    user.password = undefined;
+
+    // send response
+    return res
+      .status(200)
+      .send({ message: "success", userDetails: user, accessToken: token });
   }
 );
 
