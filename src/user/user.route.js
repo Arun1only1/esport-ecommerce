@@ -6,7 +6,7 @@ import {
 } from "./user.validation.js";
 import User from "./user.model.js";
 import bcrypt from "bcrypt";
-import validateReqBody from "../middewares/validation.middleware.js";
+import validateReqBody from "../middlewares/validation.middleware.js";
 import jwt from "jsonwebtoken";
 
 const router = Router();
