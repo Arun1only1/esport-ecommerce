@@ -67,11 +67,11 @@ router.post(
   }
 );
 
-// clear cart
+// clear/flush cart
 router.delete("/cart/clear", isBuyer, async (req, res) => {
   const loggedInUserId = req.loggedInUserId;
 
-  // remove cart items from logged in user
+  // remove cart items for logged in user
   await Cart.deleteMany({ buyerId: loggedInUserId });
 
   return res.status(200).send({ message: "Cart is cleared successfully." });
