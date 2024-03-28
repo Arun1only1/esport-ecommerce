@@ -101,4 +101,55 @@ router.delete(
 );
 
 // edit a product
+router.put(
+  "/product/edit/:id",
+  isSeller,
+  validateIdFromReqParams,
+  validateReqBody(addProductValidationSchema),
+  async (req, res) => {
+    // extract product id from req.params
+    const productId = req.params.id;
+
+    // find product by id
+    const product = await Product.findById(productId);
+
+    // if not product, throw error
+    if (!product) {
+      return res.status(404).send({ message: "Product does not exist." });
+    }
+
+    // check for product ownership
+    // product's sellerId must be same with loggedInUserId
+    const productOwnerId = product.sellerId;
+    const loggedInUserId = req.loggedInUserId;
+
+    const isProductOwner = productOwnerId.equals(loggedInUserId);
+
+    // if not owner of product, throw error
+    if (!isProductOwner) {
+      return res
+        .status(403)
+        .send({ message: "You are not owner of this product." });
+    }
+
+    // extract newValues from req.body
+    const newValues = req.body;
+
+    // edit product
+    await Product.updateOne(
+      { _id: productId },
+      {
+        $set: {
+          ...newValues,
+        },
+      }
+    );
+
+    // send response
+    return res
+      .status(200)
+      .send({ message: "Product is updated successfully." });
+  }
+);
+
 export default router;
