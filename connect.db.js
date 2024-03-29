@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 
 const userName = "arun";
-const password = encodeURIComponent("arun2nly2");
+const password = encodeURIComponent("arun3nly3");
 const databaseName = "esports-ecommerce";
+const databaseHost = "school.b6qkdnb.mongodb.net";
 
-const dbURL = `mongodb+srv://${userName}:${password}@school.b6qkdnb.mongodb.net/${databaseName}?retryWrites=true&w=majority`;
+const dbURL = `mongodb+srv://${userName}:${password}@${databaseHost}/${databaseName}?retryWrites=true&w=majority`;
 
 const connectDB = async () => {
   try {

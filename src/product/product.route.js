@@ -1,9 +1,16 @@
 import express from "express";
-import { isSeller, isUser } from "../middlewares/authentication.middleware.js";
+import {
+  isBuyer,
+  isSeller,
+  isUser,
+} from "../middlewares/authentication.middleware.js";
 import validateIdFromReqParams from "../middlewares/validate.id.middleware.js";
 import validateReqBody from "../middlewares/validation.middleware.js";
 import Product from "./product.model.js";
-import { addProductValidationSchema } from "./product.validation.js";
+import {
+  addProductValidationSchema,
+  paginationValidationSchema,
+} from "./product.validation.js";
 
 const router = express.Router();
 
@@ -152,4 +159,77 @@ router.put(
   }
 );
 
+// list product by buyer
+router.get(
+  "/product/list/buyer",
+  isBuyer,
+  validateReqBody(paginationValidationSchema),
+  async (req, res) => {
+    // extract pagination data from req.body
+    const { page, limit } = req.body;
+
+    const skip = (page - 1) * limit;
+
+    const products = await Product.aggregate([
+      {
+        $match: {},
+      },
+      {
+        $skip: skip,
+      },
+      { $limit: limit },
+      {
+        $project: {
+          name: 1,
+          brand: 1,
+          price: 1,
+          category: 1,
+          freeShipping: 1,
+          availableQuanity: 1,
+          description: 1,
+          image: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).send({ message: "success", productList: products });
+  }
+);
+
+// list product by seller
+router.get(
+  "/product/list/seller",
+  isSeller,
+  validateReqBody(paginationValidationSchema),
+  async (req, res) => {
+    // extract pagination data from req.body
+    const { page, limit } = req.body;
+
+    // calculate skip
+    const skip = (page - 1) * limit;
+
+    const products = await Product.aggregate([
+      {
+        $match: {
+          sellerId: req.loggedInUserId,
+        },
+      },
+
+      { $skip: skip },
+
+      { $limit: limit },
+
+      {
+        $project: {
+          sellerId: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          __v: 0,
+        },
+      },
+    ]);
+
+    return res.status(200).send({ message: "success", productList: products });
+  }
+);
 export default router;
