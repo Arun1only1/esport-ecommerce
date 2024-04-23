@@ -160,7 +160,7 @@ router.put(
 );
 
 // list product by buyer
-router.get(
+router.post(
   "/product/list/buyer",
   isBuyer,
   validateReqBody(paginationValidationSchema),
@@ -197,7 +197,7 @@ router.get(
 );
 
 // list product by seller
-router.get(
+router.post(
   "/product/list/seller",
   isSeller,
   validateReqBody(paginationValidationSchema),
