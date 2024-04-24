@@ -221,10 +221,14 @@ router.post(
 
       {
         $project: {
-          sellerId: 0,
-          createdAt: 0,
-          updatedAt: 0,
-          __v: 0,
+          name: 1,
+          brand: 1,
+          price: 1,
+          category: 1,
+          freeShipping: 1,
+          availableQuanity: 1,
+          description: { $substr: ["$description", 0, 200] },
+          image: 1,
         },
       },
     ]);
