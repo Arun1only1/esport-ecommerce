@@ -21,7 +21,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // connect database
-connectDB();
+await connectDB();
 
 // register routes
 app.use(userRoutes);
