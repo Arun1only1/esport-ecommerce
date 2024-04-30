@@ -192,7 +192,15 @@ router.post(
       },
     ]);
 
-    return res.status(200).send({ message: "success", productList: products });
+    // total products
+    const totalProducts = await Product.find().countDocuments();
+
+    // total pages
+    const totalPage = Math.ceil(totalProducts / limit);
+
+    return res
+      .status(200)
+      .send({ message: "success", productList: products, totalPage });
   }
 );
 
@@ -233,7 +241,17 @@ router.post(
       },
     ]);
 
-    return res.status(200).send({ message: "success", productList: products });
+    // calculate page
+    const totalProducts = await Product.find({
+      sellerId: req.loggedInUserId,
+    }).countDocuments();
+
+    // total page
+    const totalPage = Math.ceil(totalProducts / limit);
+
+    return res
+      .status(200)
+      .send({ message: "success", productList: products, totalPage });
   }
 );
 export default router;
