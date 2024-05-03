@@ -214,9 +214,41 @@ router.get("/cart/item/list", isBuyer, async (req, res) => {
         productId: 1,
       },
     },
+    {
+      $project: {
+        name: 1,
+        brand: 1,
+        unitPrice: 1,
+        image: 1,
+        orderedQuantity: 1,
+        productId: 1,
+        subTotal: { $multiply: ["$unitPrice", "$orderedQuantity"] },
+      },
+    },
   ]);
 
-  return res.status(200).send({ message: "success", cartData: cartData });
+  let allProductSubTotal = 0;
+  let discountPercent = 5; // 5 percent flat discount
+  let discountAmount = 0;
+  let grandTotal = 0;
+
+  cartData.forEach((item) => {
+    allProductSubTotal = allProductSubTotal + item.subTotal;
+  });
+
+  discountAmount = 0.05 * allProductSubTotal;
+
+  grandTotal = allProductSubTotal - discountAmount;
+
+  return res.status(200).send({
+    message: "success",
+    cartData: cartData,
+    orderSummary: {
+      allProductSubTotal,
+      discountAmount: discountAmount.toFixed(2),
+      grandTotal,
+    },
+  });
 });
 
 // get cart item count

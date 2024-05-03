@@ -33,6 +33,9 @@ router.post(
 
     newProduct.sellerId = loggedInUserId;
 
+    // change price to lowest unit i.e paisa, cent
+    newProduct.price = newProduct.price * 100;
+
     // create product
     await Product.create(newProduct);
 
@@ -142,6 +145,9 @@ router.put(
     // extract newValues from req.body
     const newValues = req.body;
 
+    // change price to lowest unit i.e paisa, cent
+    newValues.price = newValues.price * 100;
+
     // edit product
     await Product.updateOne(
       { _id: productId },
@@ -166,13 +172,20 @@ router.post(
   validateReqBody(paginationValidationSchema),
   async (req, res) => {
     // extract pagination data from req.body
-    const { page, limit } = req.body;
+    const { page, limit, searchText } = req.body;
 
     const skip = (page - 1) * limit;
 
+    let match = {};
+
+    if (searchText) {
+      match = { name: { $regex: searchText, $options: "i" } };
+    }
+
+    console.log(match);
     const products = await Product.aggregate([
       {
-        $match: {},
+        $match: match,
       },
       {
         $skip: skip,
@@ -193,7 +206,7 @@ router.post(
     ]);
 
     // total products
-    const totalProducts = await Product.find().countDocuments();
+    const totalProducts = await Product.find(match).countDocuments();
 
     // total pages
     const totalPage = Math.ceil(totalProducts / limit);

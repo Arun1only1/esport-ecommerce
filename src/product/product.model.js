@@ -71,6 +71,13 @@ const productSchema = new mongoose.Schema(
   }
 );
 
+// TODO: convert paisa to rs
+productSchema.methods.toJSON = function () {
+  var obj = this.toObject(); //or var obj = this;
+  obj.price = obj.price / 100;
+  return obj;
+};
+
 // create collection
 const Product = mongoose.model("Product", productSchema);
 
