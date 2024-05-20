@@ -9,6 +9,7 @@ import validateReqBody from "../middlewares/validation.middleware.js";
 import Product from "./product.model.js";
 import {
   addProductValidationSchema,
+  listProductByBuyerValidationSchema,
   paginationValidationSchema,
 } from "./product.validation.js";
 
@@ -34,7 +35,7 @@ router.post(
     newProduct.sellerId = loggedInUserId;
 
     // change price to lowest unit i.e paisa, cent
-    newProduct.price = newProduct.price * 100;
+    // newProduct.price = newProduct.price * 100;
 
     // create product
     await Product.create(newProduct);
@@ -146,7 +147,7 @@ router.put(
     const newValues = req.body;
 
     // change price to lowest unit i.e paisa, cent
-    newValues.price = newValues.price * 100;
+    // newValues.price = newValues.price * 100;
 
     // edit product
     await Product.updateOne(
@@ -169,10 +170,12 @@ router.put(
 router.post(
   "/product/list/buyer",
   isBuyer,
-  validateReqBody(paginationValidationSchema),
+  validateReqBody(listProductByBuyerValidationSchema),
   async (req, res) => {
     // extract pagination data from req.body
-    const { page, limit, searchText } = req.body;
+    const { page, limit, searchText, category, minPrice, maxPrice } = req.body;
+
+    console.log({ page, limit, searchText, category, minPrice, maxPrice });
 
     const skip = (page - 1) * limit;
 
@@ -180,6 +183,20 @@ router.post(
 
     if (searchText) {
       match = { name: { $regex: searchText, $options: "i" } };
+    }
+
+    if (category) {
+      match = { ...match, category: category };
+    }
+
+    if (minPrice && maxPrice && maxPrice < minPrice) {
+      return res
+        .status(409)
+        .send({ message: "Min price cannot be greater than max price." });
+    }
+
+    if (minPrice || maxPrice) {
+      match = { ...match, price: { $gte: minPrice, $lte: maxPrice } };
     }
 
     console.log(match);
